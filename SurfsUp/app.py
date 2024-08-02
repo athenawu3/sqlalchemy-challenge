@@ -60,12 +60,13 @@ def precipitation():
     past_year = recent_date - dt.timedelta(days=365)
 
     past_year_data = session.query(Measurement.date, Measurement.prcp).\
-        filter(Measurement.date >= past_year).\
-        filter(Measurement.date <= recent_date).all()
+        filter(Measurement.date >= past_year).all()
 
-    data = {
-        r.date: r.prcp for r in past_year_data
-    }
+    data = {}
+    for r in past_year_data:
+        if r.date not in data:
+            data[r.date] = []
+        data[r.date].append(r.prcp)
 
     return jsonify(data)
 
@@ -95,8 +96,7 @@ def tobs():
 
     temp_data_query = session.query(Measurement.date, Measurement.tobs).\
         filter(Measurement.station == active_station).\
-        filter(Measurement.date >= past_year).\
-        filter(Measurement.date <= recent_date).all()
+        filter(Measurement.date >= past_year).all()
 
     temp_data = {
         r.date: r.tobs for r in temp_data_query
@@ -115,16 +115,13 @@ def specified_start(start):
         recent_date = dt.datetime.strptime(recent_date_row[0], '%Y-%m-%d')
 
         tmin = session.query(func.min(Measurement.tobs)).\
-            filter(Measurement.date >= start_date).\
-            filter(Measurement.date <= recent_date).scalar()
+            filter(Measurement.date >= start_date).scalar()
 
         tmax = session.query(func.max(Measurement.tobs)).\
-            filter(Measurement.date >= start_date).\
-            filter(Measurement.date <= recent_date).scalar()
+            filter(Measurement.date >= start_date).scalar()
 
         tavg = session.query(func.avg(Measurement.tobs)).\
-            filter(Measurement.date >= start_date).\
-            filter(Measurement.date <= recent_date).scalar()
+            filter(Measurement.date >= start_date).scalar()
 
         stats = {
             "Min Temp": tmin,
